@@ -39,10 +39,17 @@ FROM tmp
 GROUP BY uid, area, diff
 HAVING min(scan_time) + INTERVAL 30 MINUTE <= max(scan_time)
 )
-SELECT *
+SELECT *, GREATEST(u1.start_time, u2.start_time) AS intersect_start,
+    LEAST(u1.end_time, u2.end_time) AS intersect_end
 FROM tmp2 u1
 JOIN tmp2 u2
 ON (u1.uid <> u2.uid AND u1.area = u2.area
     AND u1.start_time + INTERVAL 10 MINUTE <= u2.end_time
     AND u2.start_time + INTERVAL 10 MINUTE <= u1.end_time)
-WHERE u1.uid = '13011111111';
+    -- AND u1.start_time < u2.end_time
+    -- AND u2.start_time < u1.end_time
+WHERE u1.uid = '13011111111'
+  -- AND GREATEST(u1.start_time, u2.start_time) < LEAST(u1.end_time, u2.end_time);
+
+-- 思考：如何获得人员时空上的交集？
+-- 时空交集：同一空间内，重叠时间start_time的最大值（最晚的时间），end_time的最小值（最早离开时间）且交集开始时间 < 交集结束时间
